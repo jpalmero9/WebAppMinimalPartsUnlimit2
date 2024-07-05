@@ -1,0 +1,6 @@
+@WebAppMinimalPartsUnlimit2_HostAddress = http://localhost:5022
+
+GET {{WebAppMinimalPartsUnlimit2_HostAddress}}/Front/Pages/_Host/ 
+Accept: application/json
+
+###

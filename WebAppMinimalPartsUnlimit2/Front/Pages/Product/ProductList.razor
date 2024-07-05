@@ -1,0 +1,89 @@
+﻿@page "/productlist"
+
+@inject PartsBdContext DbContext
+@inject NavigationManager Navigation
+@using Microsoft.EntityFrameworkCore
+@using WebAppMinimalPartsUnlimit2.Entities
+@using WebAppMinimalPartsUnlimit2.Entities.Dtos
+@using WebAppMinimalPartsUnlimit2.Front.Services
+
+<h3>Products</h3>
+
+@if (products == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>SkuNumber</th>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>@product.SkuNumber</td>
+                    <td>@product.Title</td>
+                    <td>@product.Price</td>
+                    <td>
+                        <button @onclick="() => EditProduct(product.ProductId)" class="btn btn-primary">Edit</button>
+                        <button @onclick="() => DeleteProduct(product.ProductId)" class="btn btn-danger">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button @onclick="CreateProduct" class="btn btn-success">Create New Product</button>
+}
+
+@code {
+    private List<ProductDto> products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await DbContext.Products.Select(p => new ProductDto
+            {
+                ProductId = p.ProductId,
+                ProductGuid = p.ProductGuid,
+                SkuNumber = p.SkuNumber,
+                Title = p.Title,
+                Price = p.Price,
+                // Map other properties as needed
+            }).ToListAsync();
+    }
+
+    private void CreateProduct()
+    {
+        Navigation.NavigateTo("/product/edit");
+    }
+
+    private void EditProduct(int productId)
+    {
+        Navigation.NavigateTo($"/product/edit/{productId}");
+    }
+
+    private async Task DeleteProduct(int productId)
+    {
+        var product = await DbContext.Products.FindAsync(productId);
+        if (product != null)
+        {
+            DbContext.Products.Remove(product);
+            await DbContext.SaveChangesAsync();
+            products = await DbContext.Products.Select(p => new ProductDto
+                {
+                    ProductId = p.ProductId,
+                    ProductGuid = p.ProductGuid,
+                    SkuNumber = p.SkuNumber,
+                    Title = p.Title,
+                    Price = p.Price,
+                    // Map other properties as needed
+                }).ToListAsync();
+        }
+    }
+}

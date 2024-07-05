@@ -1,0 +1,84 @@
+﻿@page "/categories"
+@inject NavigationManager Navigation
+@inject PartsBdContext DbContext
+@using Microsoft.EntityFrameworkCore
+@using WebAppMinimalPartsUnlimit2.Entities
+@using WebAppMinimalPartsUnlimit2.Entities.Dtos
+
+<h3>Categories</h3>
+
+@if (categories == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Image URL</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in categories)
+            {
+                <tr>
+                    <td>@category.CategoryId</td>
+                    <td>@category.Name</td>
+                    <td>@category.Description</td>
+                    <td>@category.ImageUrl</td>
+                    <td>
+                        <button @onclick="() => EditCategory(category.CategoryId)" class="btn btn-primary">Edit</button>
+                        <button @onclick="() => DeleteCategory(category.CategoryId)" class="btn btn-danger">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button @onclick="CreateCategory" class="btn btn-success">Create New Category</button>
+}
+
+@code {
+    private List<CategoryDto> categories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await DbContext.Categories.Select(c => new CategoryDto
+            {
+                CategoryId = c.CategoryId,
+                Name = c.Name,
+                Description = c.Description,
+                ImageUrl = c.ImageUrl
+            }).ToListAsync();
+    }
+
+    private void CreateCategory()
+    {
+        Navigation.NavigateTo("/category/edit");
+    }
+
+    private void EditCategory(int categoryId)
+    {
+        Navigation.NavigateTo($"/category/edit/{categoryId}");
+    }
+
+    private async Task DeleteCategory(int categoryId)
+    {
+        var category = await DbContext.Categories.FindAsync(categoryId);
+        if (category != null)
+        {
+            DbContext.Categories.Remove(category);
+            await DbContext.SaveChangesAsync();
+            categories = await DbContext.Categories.Select(c => new CategoryDto
+                {
+                    CategoryId = c.CategoryId,
+                    Name = c.Name,
+                    Description = c.Description,
+                    ImageUrl = c.ImageUrl
+                }).ToListAsync();
+        }
+    }
+}

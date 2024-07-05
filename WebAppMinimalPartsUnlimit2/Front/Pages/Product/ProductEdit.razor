@@ -1,0 +1,80 @@
+﻿@page "/product/edit/{id:int?}"
+@inject PartsBdContext DbContext
+@inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Forms
+@using WebAppMinimalPartsUnlimit2.Entities.Dtos
+@using WebAppMinimalPartsUnlimit2.Entities.Models
+@using WebAppMinimalPartsUnlimit2.Entities
+
+<h3>Edit Product</h3>
+
+<EditForm Model="productDto" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="skuNumber">Sku Number</label>
+        <InputText id="skuNumber" class="form-control" @bind-Value="productDto.SkuNumber" />
+    </div>
+    <div class="form-group">
+        <label for="title">Title</label>
+        <InputText id="title" class="form-control" @bind-Value="productDto.Title" />
+    </div>
+    <div class="form-group">
+        <label for="price">Price</label>
+        <InputNumber id="price" class="form-control" @bind-Value="productDto.Price" />
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private ProductCreateDto productDto = new ProductCreateDto();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id.HasValue)
+        {
+            var product = await DbContext.Products.FindAsync(Id.Value);
+            if (product != null)
+            {
+                productDto = new ProductCreateDto
+                {
+                    SkuNumber = product.SkuNumber,
+                    Title = product.Title,
+                    Price = product.Price,
+                };
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (Id.HasValue)
+        {
+            var product = await DbContext.Products.FindAsync(Id.Value);
+            if (product != null)
+            {
+                product.SkuNumber = productDto.SkuNumber;
+                product.Title = productDto.Title;
+                product.Price = productDto.Price;
+                DbContext.Products.Update(product);
+            }
+        }
+        else
+        {
+            var product = new Product
+            {
+                SkuNumber = productDto.SkuNumber,
+                Title = productDto.Title,
+                Price = productDto.Price,
+            };
+            DbContext.Products.Add(product);
+        }
+
+        await DbContext.SaveChangesAsync();
+        Navigation.NavigateTo("/products");
+    }
+}
